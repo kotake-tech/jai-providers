@@ -1,0 +1,8 @@
+{
+  "name": "opencode-japan-ai-provider",
+  "version": "1.0.0",
+  "type": "module",
+  "dependencies": {
+    "@ai-sdk/openai-compatible": "^2.0.0"
+  }
+}
