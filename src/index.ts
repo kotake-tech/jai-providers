@@ -2,6 +2,7 @@ import type { Config, Plugin, PluginOptions } from "@opencode-ai/plugin"
 
 import { DEFAULT_BASE_URL } from "./api.ts"
 import { KNOWN_MODEL_IDS } from "./catalog.ts"
+import { DEEP_THINK_PROMPT, DEEP_THINK_TOOL } from "./deep-think.ts"
 import { resolveCredentials } from "./credentials.ts"
 import { discoverModelIds } from "./discovery.ts"
 import { buildConfigModels } from "./models.ts"
@@ -23,10 +24,20 @@ export type JapanAIOptions = {
   ttlMs?: number
   /** Regex sources for discovered ids to drop. Defaults to `DEFAULT_EXCLUDE`. */
   exclude?: string[]
+  /**
+   * Register the `deep_think` tool and tell this provider's models to use it.
+   * Default true. See `deep-think.ts` for why it exists.
+   */
+  deepThink?: boolean
+  /**
+   * Pin `reasoningEffort` on every request to this provider, overriding the
+   * variant. Off by default; `"none"` is the setting that avoids the 60s limit.
+   */
+  forceEffort?: string
 }
 
-type Settings = Required<Pick<JapanAIOptions, "baseURL" | "dynamicModels">> &
-  Pick<JapanAIOptions, "userId" | "ttlMs" | "exclude">
+type Settings = Required<Pick<JapanAIOptions, "baseURL" | "dynamicModels" | "deepThink">> &
+  Pick<JapanAIOptions, "userId" | "ttlMs" | "exclude" | "forceEffort">
 
 function parseOptions(options?: PluginOptions): Settings {
   const raw = (options ?? {}) as JapanAIOptions
@@ -36,6 +47,8 @@ function parseOptions(options?: PluginOptions): Settings {
     dynamicModels: raw.dynamicModels ?? true,
     ttlMs: raw.ttlMs,
     exclude: raw.exclude,
+    deepThink: raw.deepThink ?? true,
+    forceEffort: raw.forceEffort,
   }
 }
 
@@ -118,6 +131,22 @@ export const JapanAIPlugin: Plugin = async (_input, options) => {
           ...existing?.models,
         } as NonNullable<typeof existing>["models"],
       }
+    },
+
+    // Registered unconditionally: opencode has no per-provider tool scoping.
+    // The system prompt below is what points this provider's models at it.
+    ...(settings.deepThink ? { tool: { deep_think: DEEP_THINK_TOOL } } : {}),
+
+    "experimental.chat.system.transform": async (input, output) => {
+      if (!settings.deepThink) return
+      if (input.model.providerID !== PROVIDER_ID) return
+      output.system.push(DEEP_THINK_PROMPT)
+    },
+
+    "chat.params": async (input, output) => {
+      if (!settings.forceEffort) return
+      if (input.model.providerID !== PROVIDER_ID) return
+      output.options.reasoningEffort = settings.forceEffort
     },
   }
 }

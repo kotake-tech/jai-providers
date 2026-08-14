@@ -60,6 +60,8 @@ JAPAN AI は個人 API キーに対してアカウントメール (`userId`) の
 | `dynamicModels` | `true` | `false` にすると `/v1/models` を叩かず `src/catalog.ts` の一覧だけを登録する |
 | `ttlMs` | 6 時間 | モデル一覧キャッシュの有効期限 |
 | `exclude` | `DEFAULT_EXCLUDE` | 除外する id の正規表現 (文字列) 配列 |
+| `deepThink` | `true` | `deep_think` ツールの登録とシステムプロンプト追加。`false` で無効 |
+| `forceEffort` | なし | 指定すると全リクエストの `reasoning_effort` を固定する。variant より優先される |
 
 ## モデル一覧の解決
 
@@ -91,6 +93,29 @@ effort を持つモデルには variant が生成される。`model` の指定�
 ```
 
 `opencode run -m <model>@<variant>` は opencode 側が variant 付き指定を解決しないため使えない。設定ファイルの `model` / `agent.*.model` か TUI から選択する。
+
+## 60 秒タイムアウトと deep_think
+
+JAPAN AI は**最初のトークンが 60 秒以内に届かないとリクエストを打ち切る**。思考が隠れた reasoning に入るとその間 1 トークンも流れないため、CoT が長いモデルはタイムアウトする。
+
+対策として、reasoning を隠さずツール呼び出しの引数として吐かせる。引数は生成と同時にストリームされるので無通信時間が発生しない。
+
+- `deep_think` ツール (`thoughts` 引数に推論を書く) を登録する
+- japan-ai のモデルにだけ、それを使うようシステムプロンプトを追加する
+
+ツール自体は opencode にプロバイダー別のスコープが無いため全モデルに登録されるが、システムプロンプトの追加は japan-ai のモデルに限定している。
+
+reasoning effort は下げておく必要がある。variant で選ぶか、`forceEffort` で固定する。
+
+```json
+{
+  "plugin": [["file:///path/to/opencode-japan-ai-provider/src/index.ts", { "forceEffort": "none" }]]
+}
+```
+
+`forceEffort` は variant の選択を上書きするため既定では無効。個別に effort を使い分けたい場合は指定せず、variant 側で選ぶ。
+
+`deepThink: false` でツールとシステムプロンプトの両方を止められる。
 
 ## 設定ファイル側で上書きする
 
