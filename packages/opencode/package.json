@@ -1,0 +1,15 @@
+{
+  "name": "opencode-japan-ai-provider",
+  "version": "3.0.0",
+  "type": "module",
+  "description": "opencode plugin that registers the JAPAN AI CHAT API as a provider",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@japan-ai/core": "workspace:*"
+  },
+  "peerDependencies": {
+    "@opencode-ai/plugin": ">=1.18.0"
+  }
+}

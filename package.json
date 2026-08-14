@@ -1,20 +1,17 @@
 {
-  "name": "opencode-japan-ai-provider",
-  "version": "2.0.0",
-  "description": "opencode plugin that registers the JAPAN AI CHAT API as a provider",
+  "name": "jai-provider",
+  "version": "1.0.0",
+  "private": true,
+  "description": "JAPAN AI CHAT API integrations for opencode and omp",
   "type": "module",
   "license": "MIT",
-  "exports": {
-    ".": "./src/index.ts"
-  },
-  "files": [
-    "src"
-  ],
+  "workspaces": ["packages/*"],
   "scripts": {
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "omp:models": "bun packages/omp/bin/omp-models.ts"
   },
-  "peerDependencies": {
-    "@opencode-ai/plugin": ">=1.18.0"
+  "dependencies": {
+    "yaml": "^2.9.0"
   },
   "devDependencies": {
     "@opencode-ai/plugin": "1.18.16",

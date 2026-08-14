@@ -1,4 +1,4 @@
-import { displayName, resolveMeta, type ModelMeta } from "./catalog.ts"
+import { displayName, resolveMeta, type ModelMeta } from "@japan-ai/core/catalog"
 
 /** opencode variant entries are model option overrides, keyed by variant name. */
 export type Variants = Record<string, Record<string, unknown>>

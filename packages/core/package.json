@@ -1,0 +1,14 @@
+{
+  "name": "@japan-ai/core",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Shared JAPAN AI model catalog, discovery, and credential resolution",
+  "exports": {
+    "./catalog": "./src/catalog.ts",
+    "./api": "./src/api.ts",
+    "./cache": "./src/cache.ts",
+    "./credentials": "./src/credentials.ts",
+    "./discovery": "./src/discovery.ts",
+    "./deep-think": "./src/deep-think.ts"
+  }
+}

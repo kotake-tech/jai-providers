@@ -1,0 +1,13 @@
+{
+  "name": "omp-japan-ai",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "omp extension and models.yml generator for the JAPAN AI CHAT API",
+  "exports": {
+    "./extension": "./src/extension.ts"
+  },
+  "dependencies": {
+    "@japan-ai/core": "workspace:*",
+    "yaml": "^2.9.0"
+  }
+}

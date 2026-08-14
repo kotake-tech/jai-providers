@@ -4,15 +4,42 @@
   "workspaces": {
     "": {
       "name": "opencode-japan-ai-provider",
+      "dependencies": {
+        "yaml": "^2.9.0",
+      },
       "devDependencies": {
         "@opencode-ai/plugin": "1.18.16",
         "@types/node": "^26.2.0",
         "typescript": "^7.0.2",
       },
     },
+    "packages/core": {
+      "name": "@japan-ai/core",
+      "version": "1.0.0",
+    },
+    "packages/omp": {
+      "name": "omp-japan-ai",
+      "version": "1.0.0",
+      "dependencies": {
+        "@japan-ai/core": "workspace:*",
+        "yaml": "^2.9.0",
+      },
+    },
+    "packages/opencode": {
+      "name": "opencode-japan-ai-provider",
+      "version": "3.0.0",
+      "dependencies": {
+        "@japan-ai/core": "workspace:*",
+      },
+      "peerDependencies": {
+        "@opencode-ai/plugin": ">=1.18.0",
+      },
+    },
   },
   "packages": {
     "@ai-sdk/provider": ["@ai-sdk/provider@3.0.8", "", { "dependencies": { "json-schema": "^0.4.0" } }, "sha512-oGMAgGoQdBXbZqNG0Ze56CHjDZ1IDYOwGYxYjO5KLSlz5HiNQ9udIXsPZ61VWaHGZ5XW/jyjmr6t2xz2jGVwbQ=="],
+
+    "@japan-ai/core": ["@japan-ai/core@workspace:packages/core"],
 
     "@msgpackr-extract/msgpackr-extract-darwin-arm64": ["@msgpackr-extract/msgpackr-extract-darwin-arm64@3.0.4", "", { "os": "darwin", "cpu": "arm64" }, "sha512-LCkGo6JDfaBhgST7UpPWgNgLINpcpabaHfyz5OBx75nUYxBsaEPxjnyNjWpeb/xBup/682QnBfRBy2/LvPutZQ=="],
 
@@ -99,6 +126,10 @@
     "multipasta": ["multipasta@0.2.8", "", {}, "sha512-ZPWuMKyv0cSO29f7hozp+k6+crZbQijV8ipMvxNxRf2SwtYGTX1ZX89Kd20VV4H9Znonx+EQn+iy1wGQsJ+b+Q=="],
 
     "node-gyp-build-optional-packages": ["node-gyp-build-optional-packages@5.2.2", "", { "dependencies": { "detect-libc": "^2.0.1" }, "bin": { "node-gyp-build-optional-packages": "bin.js", "node-gyp-build-optional-packages-optional": "optional.js", "node-gyp-build-optional-packages-test": "build-test.js" } }, "sha512-s+w+rBWnpTMwSFbaE0UXsRlg7hU4FjekKU4eyAih5T8nJuNZT1nNsskXpxmeqSK9UzkBl6UgRlnKc8hz8IEqOw=="],
+
+    "omp-japan-ai": ["omp-japan-ai@workspace:packages/omp"],
+
+    "opencode-japan-ai-provider": ["opencode-japan-ai-provider@workspace:packages/opencode"],
 
     "path-key": ["path-key@3.1.1", "", {}, "sha512-ojmeN0qd+y0jszEtoY48r0Peq5dwMEkIlCOu6Q5f41lfkswXuKtYrhgoTpLnyIcHm24Uhqx+5Tqm2InSwLhE6Q=="],
 
