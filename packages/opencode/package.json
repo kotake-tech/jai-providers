@@ -7,7 +7,7 @@
     ".": "./src/index.ts"
   },
   "dependencies": {
-    "@japan-ai/core": "workspace:*"
+    "@jai-providers/common": "workspace:*"
   },
   "peerDependencies": {
     "@opencode-ai/plugin": ">=1.18.0"

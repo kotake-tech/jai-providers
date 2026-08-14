@@ -4,7 +4,7 @@ import {
   DEEP_THINK_ARG_DESCRIPTION,
   DEEP_THINK_DESCRIPTION,
   DEEP_THINK_RESULT,
-} from "@japan-ai/core/deep-think"
+} from "@jai-providers/common/deep-think"
 
 export const DEEP_THINK_TOOL = tool({
   description: DEEP_THINK_DESCRIPTION,

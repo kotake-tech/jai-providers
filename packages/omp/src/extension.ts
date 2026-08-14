@@ -1,11 +1,10 @@
 /**
- * omp extension implementing the JAPAN AI 60-second first-token workaround.
+ * omp extension for the JAPAN AI CHAT API: registers the provider with its
+ * model list, and works around the 60-second first-token limit.
  *
  * Load it with `omp -e <path>/packages/omp/src/extension.ts`, or symlink it into
- * `~/.omp/agent/extensions/` for automatic discovery.
- *
- * Model metadata is not handled here: omp reads it from models.yml, which
- * `bin/omp-models.ts` regenerates.
+ * `~/.omp/agent/extensions/` for automatic discovery. Nothing needs to be
+ * written to models.yml.
  */
 import {
   DEEP_THINK_ARG_DESCRIPTION,
@@ -13,7 +12,9 @@ import {
   DEEP_THINK_NAME,
   DEEP_THINK_PROMPT,
   DEEP_THINK_RESULT,
-} from "@japan-ai/core/deep-think"
+} from "@jai-providers/common/deep-think"
+
+import { registerJapanAIProvider } from "./provider.ts"
 
 const PROVIDER_ID = "japan-ai"
 
@@ -22,11 +23,14 @@ export type JapanAIExtensionOptions = {
   deepThink: boolean
   /** Pin `reasoning_effort` on every request to this provider, or `false` to leave it. */
   forceEffort: string | false
+  /** Register the provider and its models. Turn off to define them in models.yml instead. */
+  registerProvider: boolean
 }
 
 const OPTIONS: JapanAIExtensionOptions = {
   deepThink: true,
   forceEffort: "none",
+  registerProvider: true,
 }
 
 /**
@@ -46,7 +50,11 @@ const WIRE_TOOL = {
   },
 }
 
-export default function japanAiExtension(pi: any) {
+export default async function japanAiExtension(pi: any) {
+  // Awaited by omp before the registry is built, so the models are in place by
+  // the time the picker and `--model` resolution run.
+  if (OPTIONS.registerProvider) await registerJapanAIProvider(pi)
+
   if (OPTIONS.deepThink) {
     pi.registerTool({
       name: DEEP_THINK_NAME,

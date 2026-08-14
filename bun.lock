@@ -4,32 +4,28 @@
   "workspaces": {
     "": {
       "name": "opencode-japan-ai-provider",
-      "dependencies": {
-        "yaml": "^2.9.0",
-      },
       "devDependencies": {
         "@opencode-ai/plugin": "1.18.16",
         "@types/node": "^26.2.0",
         "typescript": "^7.0.2",
       },
     },
-    "packages/core": {
-      "name": "@japan-ai/core",
+    "packages/common": {
+      "name": "@jai-providers/common",
       "version": "1.0.0",
     },
     "packages/omp": {
       "name": "omp-japan-ai",
       "version": "1.0.0",
       "dependencies": {
-        "@japan-ai/core": "workspace:*",
-        "yaml": "^2.9.0",
+        "@jai-providers/common": "workspace:*",
       },
     },
     "packages/opencode": {
       "name": "opencode-japan-ai-provider",
       "version": "3.0.0",
       "dependencies": {
-        "@japan-ai/core": "workspace:*",
+        "@jai-providers/common": "workspace:*",
       },
       "peerDependencies": {
         "@opencode-ai/plugin": ">=1.18.0",
@@ -39,7 +35,7 @@
   "packages": {
     "@ai-sdk/provider": ["@ai-sdk/provider@3.0.8", "", { "dependencies": { "json-schema": "^0.4.0" } }, "sha512-oGMAgGoQdBXbZqNG0Ze56CHjDZ1IDYOwGYxYjO5KLSlz5HiNQ9udIXsPZ61VWaHGZ5XW/jyjmr6t2xz2jGVwbQ=="],
 
-    "@japan-ai/core": ["@japan-ai/core@workspace:packages/core"],
+    "@jai-providers/common": ["@jai-providers/common@workspace:packages/common"],
 
     "@msgpackr-extract/msgpackr-extract-darwin-arm64": ["@msgpackr-extract/msgpackr-extract-darwin-arm64@3.0.4", "", { "os": "darwin", "cpu": "arm64" }, "sha512-LCkGo6JDfaBhgST7UpPWgNgLINpcpabaHfyz5OBx75nUYxBsaEPxjnyNjWpeb/xBup/682QnBfRBy2/LvPutZQ=="],
 

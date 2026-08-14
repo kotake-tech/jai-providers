@@ -35,11 +35,11 @@ JAPAN AI をそのまま opencode につなぐと、次の 3 点が問題にな�
 ```json
 {
   "$schema": "https://opencode.ai/config.json",
-  "plugin": ["file:///path/to/jai-provider/packages/opencode/src/index.ts"]
+  "plugin": ["file:///path/to/jai-providers/packages/opencode/src/index.ts"]
 }
 ```
 
-プラグインの参照はディレクトリではなくエントリファイルまでのパスを指定する。ディレクトリ指定 (`file:///path/to/jai-provider/packages/opencode`) では読み込まれない。
+プラグインの参照はディレクトリではなくエントリファイルまでのパスを指定する。ディレクトリ指定 (`file:///path/to/jai-providers/packages/opencode`) では読み込まれない。
 
 続けて資格情報を登録する。
 
@@ -64,7 +64,7 @@ JAPAN AI をそのまま opencode につなぐと、次の 3 点が問題にな�
 
 ```json
 {
-  "plugin": [["file:///path/to/jai-provider/packages/opencode/src/index.ts", { "userId": "you@example.com" }]]
+  "plugin": [["file:///path/to/jai-providers/packages/opencode/src/index.ts", { "userId": "you@example.com" }]]
 }
 ```
 
@@ -129,7 +129,7 @@ reasoning effort は下げておく必要がある。variant で選ぶか、`for
 
 ```json
 {
-  "plugin": [["file:///path/to/jai-provider/packages/opencode/src/index.ts", { "forceEffort": "none" }]]
+  "plugin": [["file:///path/to/jai-providers/packages/opencode/src/index.ts", { "forceEffort": "none" }]]
 }
 ```
 
@@ -170,4 +170,4 @@ bun run typecheck
 | `src/models.ts` | opencode の config モデル定義への変換 |
 | `src/deep-think.ts` | `deep_think` の opencode 向けツール定義 |
 
-モデルカタログ・`/v1/models` の取得・キャッシュ・資格情報の解決は [`@japan-ai/core`](../core) にある。omp 版と共有しているので、モデルを追加・修正する場合はそちらを編集する。
+モデルカタログ・`/v1/models` の取得・キャッシュ・資格情報の解決は [`@jai-providers/common`](../common) にある。omp 版と共有しているので、モデルを追加・修正する場合はそちらを編集する。

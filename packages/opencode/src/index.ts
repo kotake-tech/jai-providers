@@ -1,10 +1,10 @@
 import type { Config, Plugin, PluginOptions } from "@opencode-ai/plugin"
 
-import { DEFAULT_BASE_URL } from "@japan-ai/core/api"
-import { KNOWN_MODEL_IDS } from "@japan-ai/core/catalog"
-import { resolveCredentials } from "@japan-ai/core/credentials"
-import { DEEP_THINK_PROMPT } from "@japan-ai/core/deep-think"
-import { discoverModelIds } from "@japan-ai/core/discovery"
+import { DEFAULT_BASE_URL } from "@jai-providers/common/api"
+import { KNOWN_MODEL_IDS } from "@jai-providers/common/catalog"
+import { resolveCredentials } from "@jai-providers/common/credentials"
+import { DEEP_THINK_PROMPT } from "@jai-providers/common/deep-think"
+import { discoverModelIds } from "@jai-providers/common/discovery"
 import { DEEP_THINK_TOOL } from "./deep-think.ts"
 import { buildConfigModels } from "./models.ts"
 

@@ -1,21 +1,17 @@
 {
-  "name": "jai-provider",
+  "name": "jai-providers",
   "version": "1.0.0",
-  "private": true,
-  "description": "JAPAN AI CHAT API integrations for opencode and omp",
-  "type": "module",
-  "license": "MIT",
-  "workspaces": ["packages/*"],
-  "scripts": {
-    "typecheck": "tsc --noEmit",
-    "omp:models": "bun packages/omp/bin/omp-models.ts"
-  },
-  "dependencies": {
-    "yaml": "^2.9.0"
-  },
   "devDependencies": {
     "@opencode-ai/plugin": "1.18.16",
     "@types/node": "^26.2.0",
     "typescript": "^7.0.2"
-  }
+  },
+  "description": "JAPAN AI CHAT API integrations for opencode and omp",
+  "license": "MIT",
+  "private": true,
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "type": "module",
+  "workspaces": ["packages/*"]
 }

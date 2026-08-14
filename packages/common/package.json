@@ -1,5 +1,5 @@
 {
-  "name": "@japan-ai/core",
+  "name": "@jai-providers/common",
   "version": "1.0.0",
   "type": "module",
   "description": "Shared JAPAN AI model catalog, discovery, and credential resolution",
