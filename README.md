@@ -1,68 +1,109 @@
 # opencode-japan-ai-provider
 
-[OpenCode](https://opencode.ai/) 向けのカスタムプロバイダー。JAPAN AIのAPI (`https://api.japan-ai.co.jp/v1`) にリクエストする際、リクエストボディに `userId` を自動付与する。
+JAPAN AI CHAT API (`https://api.japan-ai.co.jp/v1`) を opencode のプロバイダーとして登録する opencode プラグイン。
 
-## 仕組み
+プロバイダー定義・モデル一覧・認証情報の入力口をすべてプラグイン側に閉じ込めるので、`opencode.json` 側の記述は 1 行で済む。
 
-`@ai-sdk/openai-compatible` をラップし、POSTリクエストのボディに `userId` フィールドを注入するカスタム `fetch` を差し込んでいる。
+## できること
 
-```js
-import { createJapanAI } from "opencode-japan-ai-provider"
+| フック | 役割 |
+|--------|------|
+| `auth` | `/connect japan-ai` のダイアログで API キーとアカウントメールを入力させ、資格情報として保存する |
+| `config` | プロバイダー定義とモデル一覧を注入する。`/v1/models` からモデル id を取得して自動追従する |
 
-const provider = createJapanAI({
-  baseURL: "https://api.japan-ai.co.jp/v1",
-  userId: "user@example.com",
-})
-```
+JAPAN AI は個人 API キーに対してアカウントメール (`userId`) の同送を要求する。キーは資格情報として、メールはそのメタデータとして保存されるため、どちらも設定ファイルには書かれない。
 
-## インストール
+## セットアップ
 
-```bash
-bun install
-```
-
-## OpenCodeでの設定例
-
-`~/.config/opencode/opencode.json` にプロバイダーを追加する。
-
-このパッケージをローカルパスで参照し、`userId` を渡す構成:
+`~/.config/opencode/opencode.json` に以下を追加する。
 
 ```json
 {
   "$schema": "https://opencode.ai/config.json",
-  "provider": {
-    "japan-ai": {
-      "npm": "file:///path/to/opencode-japan-ai-provider/index.js",
-      "name": "JAPAN AI",
-      "options": {
-        "baseURL": "https://api.japan-ai.co.jp/v1",
-        "userId": "your-email@example.com"
-      },
-      "models": {
-        "claude-4-7-opus": {},
-        "claude-4-6-sonnet": {},
-        "claude-4-5-haiku": {},
-        "gpt-5.5": {},
-        "gemini-3.1-pro": {},
-        "deepseek-v4-pro": {}
-      }
-    }
-  },
-  "model": "japan-ai/claude-4-7-opus"
+  "plugin": ["file:///path/to/opencode-japan-ai-provider/src/index.ts"]
 }
 ```
 
-## 利用可能なモデル
+プラグインの参照はディレクトリではなくエントリファイルまでのパスを指定する。ディレクトリ指定 (`file:///path/to/opencode-japan-ai-provider`) では読み込まれない。
 
-JAPAN AI経由で利用可能な主なモデル:
+続けて資格情報を登録する。
 
-| ベンダー | モデル |
-|----------|--------|
-| Anthropic | `claude-4-7-opus`, `claude-4-7-opus-200k`, `claude-4-6-opus`, `claude-4-6-sonnet`, `claude-4-5-opus`, `claude-4-5-sonnet`, `claude-4-5-haiku` |
-| OpenAI | `gpt-5.5`, `gpt-5.4`, `gpt-5.4-pro`, `gpt-5.4-mini`, `gpt-5.2`, `o3`, `o3-pro` |
-| Google | `gemini-3.1-pro`, `gemini-3.5-flash`, `gemini-3-flash`, `gemini-2.5-pro`, `gemini-2.5-flash` |
-| xAI | `grok-4-2`, `grok-4-1-fast`, `grok-4-fast` |
-| その他 | `deepseek-v4-pro`, `deepseek-reasoner-r1`, `kimi-k2.6`, `qwen3-coder`, `glm-5.1`, `minimax-m2.7` |
+```
+/connect japan-ai
+```
+
+`Account email (userId)` と `API Key` を聞かれるので入力する。CLI から登録する場合は `opencode providers login` でも同じフローが使える。
+
+メールは資格情報の `metadata.userId` に、キーは資格情報本体として保存される。キー入力のプロンプトは opencode が `type: "api"` のメソッドに対して必ず自前で追加するため、プラグイン側では宣言していない。
+
+### 非対話環境
+
+`/connect` を使えない環境では、プラグインオプションまたは環境変数で渡す。
+
+```json
+{
+  "plugin": [["file:///path/to/opencode-japan-ai-provider/src/index.ts", { "userId": "you@example.com" }]]
+}
+```
+
+| 環境変数 | 用途 |
+|----------|------|
+| `JAPAN_AI_API_KEY` | API キー。`/connect` 済みならそちらが優先される |
+| `JAPAN_AI_USER_ID` | アカウントメール |
+
+## プラグインオプション
+
+| キー | 既定値 | 説明 |
+|------|--------|------|
+| `userId` | なし | アカウントメール。`/connect` で登録済みならそちらが優先される |
+| `baseURL` | `https://api.japan-ai.co.jp/v1` | API のベース URL |
+| `dynamicModels` | `true` | `false` にすると `/v1/models` を叩かず `src/catalog.ts` の一覧だけを登録する |
+| `ttlMs` | 6 時間 | モデル一覧キャッシュの有効期限 |
+| `exclude` | `DEFAULT_EXCLUDE` | 除外する id の正規表現 (文字列) 配列 |
+
+## モデル一覧の解決
+
+1. `${XDG_CACHE_HOME:-~/.cache}/opencode/japan-ai-models.json` が `ttlMs` 以内なら、それを使う (起動時に通信しない)
+2. 期限切れなら `/v1/models` を取得してキャッシュを更新する
+3. 取得に失敗したら、期限切れキャッシュ → `src/catalog.ts` の同梱一覧、の順にフォールバックする
+
+即時に再取得させたいときはキャッシュファイルを削除する。
+
+`/v1/models` はモデル id しか返さないため、コンテキスト長・最大出力・reasoning effort の段階は `src/catalog.ts` で管理する。カタログに無い id は同ファイルの `FAMILY_RULES` によってベンダー別の既定値が割り当てられるので、新モデルはコード変更なしで使える。
+
+### 除外リスト
+
+`/v1/models` には、実際に `/chat/completions` へ投げると `Invalid model name` で拒否される id が含まれる。既定で以下を除外している。
+
+- `-latest` で終わる id (`gpt-latest`, `claude-opus-latest` など)
+- `-free` で終わる id
+- `jai-auto` で始まるルーターモデル
+- `glm-5`, `deepseek-chat-v3`
+
+除外対象は API キーの権限によって変わるため、`exclude` オプションで上書きできる。
+
+## reasoning effort
+
+effort を持つモデルには variant が生成される。`model` の指定時に `@` で選択する。
+
+```json
+{ "model": "japan-ai/claude-opus-5@high" }
+```
+
+`opencode run -m <model>@<variant>` は opencode 側が variant 付き指定を解決しないため使えない。設定ファイルの `model` / `agent.*.model` か TUI から選択する。
+
+## 設定ファイル側で上書きする
+
+`opencode.json` に書いたモデル定義は、プラグインが生成した定義より優先される。個別に limit を変えたい場合や、除外された id を強制的に有効化したい場合に使う。
+
+## 開発
+
+```sh
+bun install
+bun run typecheck
+```
+
+`src/index.ts` を直接エントリにしているため、ビルドは不要 (opencode が Bun 上で TypeScript をそのまま読む)。npm パッケージとして配布する場合はコンパイル済み JS を `exports` に向ける必要がある。
 
 ## ライセンス
 
