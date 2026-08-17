@@ -1,29 +1,42 @@
 # jai-providers
 
-JAPAN AI CHAT API (`https://api.japan-ai.co.jp/v1`) を各コーディングエージェントから使うための統合。
+JAPAN AI CHAT API (`https://api.japan-ai.co.jp/v1`) を、opencode と omp から利用するための拡張集です。
 
-モデル一覧と、JAPAN AI 側の仕様に対する対処を 1 箇所にまとめ、エージェントごとの薄いアダプタから共有する。
+API のモデル一覧取得、モデルごとの設定、認証情報の解決を共通化し、各エージェント向けの拡張から利用します。
 
-## パッケージ
+## 使い方
+
+| パッケージ | 対象 |
+|------------|------|
+| [`packages/opencode`](packages/opencode) | opencode で JAPAN AI を使う場合 |
+| [`packages/omp`](packages/omp) | omp で JAPAN AI を使う場合 |
+
+使いたいエージェントの README に従ってセットアップしてください。
+
+JAPAN AI CHAT API の制約と、このリポジトリでの対応は [docs/japan-ai-api.md](docs/japan-ai-api.md) にまとめています。
+
+## 開発者向け
+
+このリポジトリの開発・保守に必要な情報です。エンドユーザーは通常読む必要がありません。
+
+### パッケージ
 
 | パッケージ | 内容 |
 |------------|------|
-| [`packages/common`](packages/common) | モデルカタログ、`/v1/models` の取得とキャッシュ、資格情報の解決 |
-| [`packages/opencode`](packages/opencode) | opencode プラグイン (プロバイダー登録、`/connect`、`deep_think`) |
-| [`packages/omp`](packages/omp) | omp 拡張 (プロバイダー登録、`deep_think`、effort 固定) |
+| [`packages/common`](packages/common) | モデルカタログ、APIアクセス、キャッシュ、資格情報の解決 |
+| [`packages/opencode`](packages/opencode) | opencode用プラグイン |
+| [`packages/omp`](packages/omp) | omp用拡張 |
 
-セットアップ手順は各パッケージの README を参照。
-
-JAPAN AI CHAT API 側の仕様と、それに対する `packages/common` の対処は [docs/japan-ai-api.md](docs/japan-ai-api.md) にまとめてある。
-
-## 開発
+### 開発環境
 
 ```sh
 bun install
 bun run typecheck
 ```
 
-ビルドは不要。opencode も omp も Bun 上で TypeScript をそのまま読み込む。
+ビルドは不要です。opencodeとompは、Bun上でTypeScriptを直接読み込みます。
+
+モデルカタログやAPIアクセスに関する共通処理は [`packages/common`](packages/common) にあります。
 
 ## ライセンス
 

@@ -1,43 +1,51 @@
 # omp-japan-ai
 
-[omp](https://github.com/can1357/oh-my-pi) から JAPAN AI CHAT API を使うための拡張。
+[omp](https://github.com/can1357/oh-my-pi) から JAPAN AI CHAT API を利用するための拡張です。
 
-プロバイダー定義もモデル一覧も拡張が実行時に登録するので、`models.yml` には何も書かなくてよい。
+拡張がプロバイダーとモデル一覧を実行時に登録するため、通常は `models.yml` を編集する必要がありません。
 
 ## セットアップ
 
-拡張を読み込むだけで完了する。
+拡張を読み込みます。
 
 ```sh
 omp -e /path/to/jai-providers/packages/omp/src/extension.ts
 ```
 
-常用するなら `~/.omp/agent/extensions/` にシンボリックリンクを置けば自動で読まれる。
+継続して使う場合は、`~/.omp/agent/extensions/` にシンボリックリンクを置くと自動で読み込まれます。
 
 ```sh
 ln -s /path/to/jai-providers/packages/omp/src/extension.ts ~/.omp/agent/extensions/japan-ai.ts
 ```
 
-## 資格情報
+## 資格情報の設定
 
-omp 側に書く場所は無い。拡張が起動時に解決して `registerProvider()` へ渡すので、`models.yml` にも omp の設定ファイルにもキーは残らない。`omp auth-broker` や `omp token` の管理対象にもならない。
+API キーとメールアドレスは、opencode の資格情報ファイルまたは環境変数から読み取ります。
 
-解決順は次のとおりで、API キーとアカウントメールが両方揃わないと登録をスキップする (警告を出すだけなので、omp の他プロバイダーには影響しない)。
+`models.yml` や omp の設定ファイルに資格情報を保存する必要はありません。
 
-| 優先 | API キー | userId (アカウントメール) |
+API キーとメールアドレスは次の順に解決します。
+
+どちらかが不足している場合は、JAPAN AI プロバイダーを登録しません。
+
+警告を表示するだけなので、他のプロバイダーには影響しません。
+
+| 優先 | API キー | userId（メールアドレス） |
 |------|----------|---------------------------|
 | 1 | `auth.json` の `japan-ai.key` | `auth.json` の `japan-ai.metadata.userId` |
 | 2 | `JAPAN_AI_API_KEY` | `JAPAN_AI_USER_ID` |
 
-### opencode の `/connect` を使う
+### opencode の `/connect` で登録する
 
-opencode で一度登録すれば omp もそれを読む。
+opencode で一度登録すると、omp も同じ資格情報を利用します。
 
 ```
 /connect japan-ai
 ```
 
-保存先は `${XDG_DATA_HOME:-~/.local/share}/opencode/auth.json`。opencode を使わない場合も、同じ形のファイルを置けば omp から使える。
+資格情報は `${XDG_DATA_HOME:-~/.local/share}/opencode/auth.json` に保存されます。
+
+opencode を使わない場合も、同じ形式のファイルを置けば omp から利用できます。
 
 ```json
 {
@@ -56,7 +64,9 @@ export JAPAN_AI_API_KEY="$(security find-generic-password -s japan-ai -w)"
 export JAPAN_AI_USER_ID='you@example.com'
 ```
 
-シェルの rc に平文で書くとキーが残るので、キーチェーンやシークレットマネージャー経由で注入する。
+シェルの設定ファイルに API キーを平文で書くと、キーが残ります。
+
+macOS のキーチェーンやシークレットマネージャーを使って設定してください。
 
 ### 確認
 
@@ -64,60 +74,75 @@ export JAPAN_AI_USER_ID='you@example.com'
 omp models japan-ai
 ```
 
-解決できていない場合は起動時に `[japan-ai] no credential found; skipping provider registration.` が出る。
+資格情報を解決できない場合は、起動時に次のメッセージが表示されます。
+
+```text
+[japan-ai] no credential found; skipping provider registration.
+```
 
 ## モデル一覧
 
-拡張のロード時に `/v1/models` を取得し、`pi.registerProvider()` でモデルごと登録する。omp のファクトリは `await` されるため、モデルピッカーや `--model` の解決が走る前に出揃う。
+拡張の読み込み時に `/v1/models` を取得し、`pi.registerProvider()` でモデルを登録します。
 
-一覧は `${XDG_CACHE_HOME:-~/.cache}/opencode/japan-ai-models.json` に 6 時間キャッシュされるので、通常の起動で通信は発生しない。取得に失敗した場合は期限切れキャッシュ、同梱カタログの順にフォールバックする。opencode プラグインとキャッシュを共有する。
+omp は拡張の初期化完了を待つため、モデルピッカーや `--model` の解決前にモデル一覧を利用できます。
 
-コンテキスト長・最大出力・effort の段階は [`@jai-providers/common`](../common) のカタログが持つ。並び順もカタログ順 (ベンダー別) になる。
+モデル一覧は `${XDG_CACHE_HOME:-~/.cache}/opencode/japan-ai-models.json` に 6 時間キャッシュされます。
 
-### omp のネイティブ discovery を使わない理由
+キャッシュが有効な間は、通常の起動で通信しません。
 
-omp には `discovery.type: openai-models-list` があるが、**JAPAN AI では使えない**。URL を組み立てる `normalizeOpenAIModelsListBaseUrl` が `protocol + host + pathname` しか返さないため、クエリ文字列が構造的に落ちる。JAPAN AI は個人 API キーに `?userId=<メール>` を要求し、ヘッダーも body も受け付けないので `/models` が 403 になる。
+取得に失敗した場合は、期限切れのキャッシュ、同梱カタログの順に利用します。
 
-さらに discovery は正規化後の baseUrl を各モデルに焼き込むため、仮に一覧が取れてもチャット側が `userId` 無しで飛んで 403 になる。拡張が自分で fetch すればこの正規化を一切通らない。
+このキャッシュは opencode プラグインと共有します。
 
-### 静的定義に戻す
+コンテキスト長、最大出力トークン数、reasoning effort の選択肢は [`@jai-providers/common`](../common) のカタログで管理します。
 
-`src/extension.ts` の `OPTIONS.registerProvider` を `false` にすると登録しない。その場合は `models.yml` に自分で書く。
+モデルはカタログ順に、ベンダーごとに表示されます。
 
-なお `models.yml` に書いた場合、omp は `claude-4-5-opus-thinking` のような `-thinking` で終わる id を variant alias として吸収し、モデル一覧から落とす。拡張による登録ではそれらもそのまま出る。
+### 標準のモデル検出を使わない理由
+
+omp には `discovery.type: openai-models-list` がありますが、JAPAN AI では使えません。
+
+URL を組み立てる `normalizeOpenAIModelsListBaseUrl` がクエリ文字列を保持しないためです。
+
+JAPAN AI の個人 API キーには `?userId=<メールアドレス>` が必要ですが、ヘッダーやリクエストボディでは指定できません。
+
+そのため、標準 discovery では `/models` が 403 になります。
+
+さらに discovery は、正規化後の base URL を各モデルに設定します。
+
+仮に一覧を取得できても、チャットリクエストから `userId` が失われ、403 になります。
+
+この拡張はモデル一覧を独自に取得することで、URL の正規化を経由しません。
 
 ## 60 秒タイムアウトと deep_think
 
-JAPAN AI は最初のトークンが 60 秒以内に届かないとリクエストを打ち切る。隠れた reasoning はトークンを出さないため、CoT が長いとタイムアウトする。
+JAPAN AI は、最初のトークンが 60 秒以内に届かないリクエストを中断します。
 
-拡張を読み込むと、japan-ai のモデルに対してのみ以下が効く。
+モデルが非表示の推論を長く行うと、その間はトークンが届かないため、タイムアウトすることがあります。
 
-1. `reasoning_effort` を `none` に固定する (`before_provider_request`)
-2. `deep_think` ツールを登録し、リクエストの `tools` に注入する
-3. 「非自明な回答の前に `deep_think` を呼べ」というシステムプロンプトを足す (`before_agent_start`)
+この拡張では、JAPAN AI のモデルに対してだけ次の処理を行います。
 
-### ツールを注入している理由
+1. `reasoning_effort` を `none` に固定します（`before_provider_request`）。
+2. `deep_think` ツールを登録し、リクエストの `tools` に追加します。
+3. 複雑な回答の前に `deep_think` を呼ぶよう、システムプロンプトを追加します（`before_agent_start`）。
 
-omp は拡張が登録したツールを、そのままではリクエストの `tools` に載せない。MCP ツールと同じく `hub` 経由の on-demand 参照になる (`tools.xdevDocs` を `inline` にしても変わらない)。
+この設定は通常の利用で変更する必要はありません。
 
-`hub` 経由だと 1 ホップ余計に挟まり、推論をストリームさせるという目的に合わない。そこで `before_provider_request` でツールスキーマを直接 `payload.tools` に push している。実行自体は `pi.registerTool()` 済みなのでエージェントループが解決する。
+## 開発者向け設定
 
-### 設定
+この節は、拡張の挙動を変更する場合にだけ参照してください。
 
-`src/extension.ts` の `OPTIONS` を編集する。
+`src/extension.ts` の `OPTIONS` で次の項目を設定できます。
 
-| キー | 既定値 | 説明 |
+| オプション | 既定値 | 説明 |
 |------|--------|------|
 | `deepThink` | `true` | ツール登録・注入とシステムプロンプト追加 |
 | `forceEffort` | `"none"` | `reasoning_effort` の固定値。`false` で無効 |
 | `registerProvider` | `true` | プロバイダーとモデル一覧の登録 |
 
-`forceEffort` を無効にする場合は、omp ネイティブの `:effort` セレクタで下げる。
+`forceEffort` を無効にする場合は、ompの`:effort`セレクタで低いeffortを選択してください。
 
-```yaml
-modelRoles:
-  default: japan-ai/gpt-5.6-sol:none
-```
+omp は、拡張が登録したツールをそのままリクエストの `tools` に含めません。`hub` 経由の参照では追加のリクエストが発生するため、`before_provider_request` でツールスキーマを直接 `payload.tools` に追加しています。
 
 ## ライセンス
 

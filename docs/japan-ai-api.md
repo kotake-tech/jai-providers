@@ -1,27 +1,47 @@
-# JAPAN AI CHAT API の仕様と対処
+# JAPAN AI CHAT API の制約と対応
 
-JAPAN AI CHAT API (`https://api.japan-ai.co.jp/v1`) は OpenAI 互換をうたっているが、そのままでは動かない箇所がいくつかある。以下は JAPAN AI 側の挙動と、それに対して `packages/common` が入れている対処のまとめ。
+JAPAN AI CHAT API (`https://api.japan-ai.co.jp/v1`) は OpenAI 互換 API ですが、接続先によっては追加の対応が必要です。
 
-## モデルのメタデータが API から取れない
+このページでは、利用時に影響する API の制約と、`packages/common` で行っている対応を説明します。
 
-`/v1/models` はモデル id しか返さず、コンテキスト長・最大出力・reasoning effort の段階は一切含まない。
+## モデルの詳細情報が API から取得できない
 
-これらは `packages/common/src/catalog.ts` で管理し、カタログに無い id にはベンダー別の既定値を割り当てる。新しいモデルはコード変更なしで使える。
+`/v1/models` が返すのはモデル ID だけです。
 
-## `/v1/models` が呼べないモデルを列挙する
+コンテキスト長、最大出力トークン数、reasoning effort の選択肢は含まれません。
 
-`-latest` エイリアス、`-free` 枠、`jai-auto` ルーターモデルなどは一覧に出るが、`/chat/completions` に投げると `Invalid model name` で拒否される。
+そのため、これらの情報は `packages/common/src/catalog.ts` で管理しています。
 
-`catalog.ts` の除外パターンで落としている。
+カタログにないモデル ID には、ベンダーごとの既定値を適用します。
 
-## `userId` はクエリ文字列でしか渡せない
+新しいモデルが API に追加された場合も、原則としてコードを変更せずに利用できます。
 
-個人 API キーは `?userId=<メール>` の同送を要求する。エラーメッセージは "requires userId in request body" と言うが、body に入れると JAPAN AI が上流へそのまま転送してしまい、OpenAI や Vertex 側が `Unrecognized request argument` で弾く。ヘッダーは無視される。
+## 一覧にあるが呼び出せないモデルが含まれる
 
-この制約のため、両アダプタともモデル一覧の取得を自前の fetch で行っている (エージェント側の URL 組み立てを通すとクエリが落ちる)。
+`/v1/models` には、`-latest` エイリアス、`-free` のモデル、`jai-auto` ルーターモデルなどが含まれることがあります。
 
-## 最初のトークンが 60 秒以内に届かないと打ち切られる
+これらの一部は `/chat/completions` で `Invalid model name` となり、呼び出せません。
 
-隠れた reasoning はトークンを出さないので、CoT が長いモデルはこのタイムアウトに掛かる。
+`catalog.ts` で定義した除外パターンを使い、利用できないモデルを選択肢から除外しています。
 
-effort を下げたうえで、推論を `deep_think` ツールの引数としてストリームさせる。文言は `packages/common/src/deep-think.ts` にあり、ツール定義だけ各エージェント向けに書いている。
+## `userId` はクエリパラメーターで指定する
+
+個人 API キーを使う場合は、メールアドレスを `?userId=<メールアドレス>` としてリクエストに含める必要があります。
+
+エラーメッセージには `userId` をリクエストボディに入れるよう表示されますが、ボディに含めると上流の OpenAI や Vertex が `Unrecognized request argument` として拒否します。
+
+ヘッダーで指定しても認識されません。
+
+この制約のため、両方の拡張はモデル一覧を独自に取得します。
+
+エージェント本体の URL 組み立てを経由すると、`userId` のクエリパラメーターが失われる場合があるためです。
+
+## 最初のトークンが 60 秒以内に届かないとリクエストが中断される
+
+JAPAN AI は、最初のトークンが 60 秒以内に届かないリクエストを中断します。
+
+モデルが非表示の推論を長く行うと、その間はトークンが届かないため、この制限に達することがあります。
+
+`reasoning_effort` を下げ、推論を `deep_think` ツールの引数としてストリーミングすることで、無通信時間を避けます。
+
+共通の指示文は `packages/common/src/deep-think.ts` にあり、各エージェント用パッケージではツール定義だけを持ちます。
