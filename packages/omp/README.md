@@ -88,13 +88,17 @@ omp は拡張の初期化完了を待つため、モデルピッカーや `--mod
 
 モデル一覧は `${XDG_CACHE_HOME:-~/.cache}/opencode/japan-ai-models.json` に 6 時間キャッシュされます。
 
+コンテキスト長と最大出力トークン数は `models.dev` から取得し、`japan-ai-model-metadata.json` に同じ期間キャッシュします。
+
 キャッシュが有効な間は、通常の起動で通信しません。
 
 取得に失敗した場合は、期限切れのキャッシュ、同梱カタログの順に利用します。
 
 このキャッシュは opencode プラグインと共有します。
 
-コンテキスト長、最大出力トークン数、reasoning effort の選択肢は [`@jai-providers/common`](../common) のカタログで管理します。
+オンライン取得に失敗した場合は期限切れのキャッシュを使い、情報がなければ [`@jai-providers/common`](../common) のカタログへフォールバックします。
+
+reasoning effort の選択肢と JAPAN AI 固有の上限は共通カタログで管理します。
 
 モデルはカタログ順に、ベンダーごとに表示されます。
 

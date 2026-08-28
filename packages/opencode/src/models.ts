@@ -1,4 +1,5 @@
 import { displayName, resolveMeta, type ModelMeta } from "@jai-providers/common/catalog"
+import type { OnlineModelMetadata } from "@jai-providers/common/model-metadata"
 
 /** opencode variant entries are model option overrides, keyed by variant name. */
 export type Variants = Record<string, Record<string, unknown>>
@@ -20,10 +21,13 @@ function buildVariants(meta: ModelMeta): Variants | undefined {
   return Object.fromEntries(meta.efforts.map((effort) => [effort, { reasoningEffort: effort }]))
 }
 
-export function buildConfigModels(ids: readonly string[]): Record<string, ConfigModel> {
+export function buildConfigModels(
+  ids: readonly string[],
+  onlineMetadata: OnlineModelMetadata = {},
+): Record<string, ConfigModel> {
   return Object.fromEntries(
     ids.map((id) => {
-      const meta = resolveMeta(id)
+      const meta = resolveMeta(id, onlineMetadata[id])
       return [
         id,
         {

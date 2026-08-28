@@ -9,6 +9,7 @@
     "./cache": "./src/cache.ts",
     "./credentials": "./src/credentials.ts",
     "./discovery": "./src/discovery.ts",
+    "./model-metadata": "./src/model-metadata.ts",
     "./deep-think": "./src/deep-think.ts"
   }
 }

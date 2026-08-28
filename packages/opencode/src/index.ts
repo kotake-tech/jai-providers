@@ -4,7 +4,8 @@ import { DEFAULT_BASE_URL } from "@jai-providers/common/api"
 import { KNOWN_MODEL_IDS } from "@jai-providers/common/catalog"
 import { resolveCredentials } from "@jai-providers/common/credentials"
 import { DEEP_THINK_PROMPT } from "@jai-providers/common/deep-think"
-import { discoverModelIds } from "@jai-providers/common/discovery"
+import { DEFAULT_TTL_MS, discoverModelIds } from "@jai-providers/common/discovery"
+import { discoverModelMetadata } from "@jai-providers/common/model-metadata"
 import { DEEP_THINK_TOOL } from "./deep-think.ts"
 import { buildConfigModels } from "./models.ts"
 
@@ -116,6 +117,7 @@ export const JapanAIPlugin: Plugin = async (_input, options) => {
       const providers = (config.provider ??= {})
       const existing = providers[PROVIDER_ID]
       const ids = await resolveModelIds(settings)
+      const metadata = await discoverModelMetadata(ids, settings.ttlMs ?? DEFAULT_TTL_MS)
 
       providers[PROVIDER_ID] = {
         name: PROVIDER_NAME,
@@ -128,7 +130,7 @@ export const JapanAIPlugin: Plugin = async (_input, options) => {
         },
         // Entries written by hand in opencode.json win over generated ones.
         models: {
-          ...buildConfigModels(ids),
+          ...buildConfigModels(ids, metadata),
           ...existing?.models,
         } as NonNullable<typeof existing>["models"],
       }

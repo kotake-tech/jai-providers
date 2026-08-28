@@ -60,7 +60,7 @@ const CATALOG: Record<string, Partial<ModelMeta>> = {
   "claude-4-5-haiku": {},
 
   // OpenAI
-  "gpt-5.6-sol": { contextWindow: 1_000_000, efforts: EFFORTS_GPT },
+  "gpt-5.6-sol": { efforts: EFFORTS_GPT },
   "gpt-5.6-terra": { efforts: EFFORTS_GPT },
   "gpt-5.6-luna": { efforts: EFFORTS_GPT },
   "gpt-5.5": {},
@@ -124,9 +124,9 @@ const CATALOG: Record<string, Partial<ModelMeta>> = {
 
 export const KNOWN_MODEL_IDS: readonly string[] = Object.keys(CATALOG)
 
-export function resolveMeta(id: string): ModelMeta {
+export function resolveMeta(id: string, online?: Partial<ModelMeta>): ModelMeta {
   const rule = FAMILY_RULES.find((r) => r.match.test(id))
-  return { ...DEFAULT_META, ...rule?.meta, ...CATALOG[id] }
+  return { ...DEFAULT_META, ...rule?.meta, ...online, ...CATALOG[id] }
 }
 
 /** Tokens that must not go through generic capitalization. */

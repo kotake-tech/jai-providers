@@ -1,4 +1,5 @@
 import { KNOWN_MODEL_IDS, resolveMeta } from "@jai-providers/common/catalog"
+import type { OnlineModelMetadata } from "@jai-providers/common/model-metadata"
 
 /**
  * omp expresses "no reasoning" through the `:none` model selector rather than
@@ -25,9 +26,9 @@ function catalogOrder(ids: readonly string[]): string[] {
   })
 }
 
-export function buildOmpModels(ids: readonly string[]): OmpModel[] {
+export function buildOmpModels(ids: readonly string[], onlineMetadata: OnlineModelMetadata = {}): OmpModel[] {
   return catalogOrder(ids).map((id) => {
-    const meta = resolveMeta(id)
+    const meta = resolveMeta(id, onlineMetadata[id])
     const efforts = meta.efforts ? ompEfforts(meta.efforts) : []
     return {
       id,

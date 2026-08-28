@@ -73,7 +73,7 @@ CLI から登録する場合は、`opencode providers login` でも同じ手順�
 | `userId` | なし | メールアドレス。`/connect` で登録済みならそちらが優先される |
 | `baseURL` | `https://api.japan-ai.co.jp/v1` | API のベース URL |
 | `dynamicModels` | `true` | `false` にすると `/v1/models` を取得せず、`src/catalog.ts` の一覧だけを登録する |
-| `ttlMs` | 6 時間 | モデル一覧キャッシュの有効期限 |
+| `ttlMs` | 6 時間 | モデル一覧とメタデータのキャッシュ有効期限 |
 | `exclude` | `DEFAULT_EXCLUDE` | 除外するモデル ID を表す正規表現の文字列配列 |
 | `deepThink` | `true` | `deep_think` ツールの登録とシステムプロンプト追加。`false` で無効 |
 | `forceEffort` | なし | 指定すると全リクエストの `reasoning_effort` を固定する。variant より優先される |
@@ -90,9 +90,13 @@ CLI から登録する場合は、`opencode providers login` でも同じ手順�
 
 すぐに再取得したい場合は、キャッシュファイルを削除してください。
 
-`/v1/models` はモデル ID しか返さないため、コンテキスト長、最大出力トークン数、reasoning effort の選択肢は `src/catalog.ts` で管理します。
+`/v1/models` はモデル ID しか返さないため、コンテキスト長と最大出力トークン数は [`models.dev`](https://models.dev/) から取得します。
 
-カタログにないモデル ID には、同ファイルの `FAMILY_RULES` によりベンダーごとの既定値を適用します。
+メタデータは `${XDG_CACHE_HOME:-~/.cache}/opencode/japan-ai-model-metadata.json` に `ttlMs` の間キャッシュします。
+
+取得に失敗した場合は期限切れのキャッシュを使い、情報がないモデルには `src/catalog.ts` の明示値またはベンダーごとの既定値を適用します。
+
+reasoning effort の選択肢と JAPAN AI 固有の上限は、引き続き `src/catalog.ts` で管理します。
 
 ### 除外リスト
 

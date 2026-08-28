@@ -10,11 +10,11 @@ JAPAN AI CHAT API (`https://api.japan-ai.co.jp/v1`) は OpenAI 互換 API です
 
 コンテキスト長、最大出力トークン数、reasoning effort の選択肢は含まれません。
 
-そのため、これらの情報は `packages/common/src/catalog.ts` で管理しています。
+コンテキスト長と最大出力トークン数は `models.dev` から取得し、6 時間キャッシュします。
 
-カタログにないモデル ID には、ベンダーごとの既定値を適用します。
+取得に失敗した場合は期限切れのキャッシュを使い、情報がないモデルには `packages/common/src/catalog.ts` の明示値またはベンダーごとの既定値を適用します。
 
-新しいモデルが API に追加された場合も、原則としてコードを変更せずに利用できます。
+reasoning effort の選択肢と JAPAN AI 固有の上限は、同カタログで管理します。
 
 ## 一覧にあるが呼び出せないモデルが含まれる
 

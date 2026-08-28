@@ -1,6 +1,7 @@
 import { DEFAULT_BASE_URL } from "@jai-providers/common/api"
 import { resolveCredentials } from "@jai-providers/common/credentials"
-import { discoverModelIds } from "@jai-providers/common/discovery"
+import { DEFAULT_TTL_MS, discoverModelIds } from "@jai-providers/common/discovery"
+import { discoverModelMetadata } from "@jai-providers/common/model-metadata"
 
 import { buildOmpModels, chatCompletionsUrl } from "./models.ts"
 
@@ -34,11 +35,12 @@ export async function registerJapanAIProvider(pi: any, options: RegisterProvider
   }
 
   const ids = await discoverModelIds({ ...credentials, baseURL })
+  const metadata = await discoverModelMetadata(ids, DEFAULT_TTL_MS)
 
   pi.registerProvider(PROVIDER_ID, {
     baseUrl: chatCompletionsUrl(baseURL, credentials.userId),
     api: API,
     apiKey: credentials.apiKey,
-    models: buildOmpModels(ids),
+    models: buildOmpModels(ids, metadata),
   })
 }
