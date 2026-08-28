@@ -60,7 +60,7 @@ const CATALOG: Record<string, Partial<ModelMeta>> = {
   "claude-4-5-haiku": {},
 
   // OpenAI
-  "gpt-5.6-sol": { efforts: EFFORTS_GPT },
+  "gpt-5.6-sol": { contextWindow: 1_000_000, efforts: EFFORTS_GPT },
   "gpt-5.6-terra": { efforts: EFFORTS_GPT },
   "gpt-5.6-luna": { efforts: EFFORTS_GPT },
   "gpt-5.5": {},
