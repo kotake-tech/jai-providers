@@ -73,16 +73,21 @@ export default async function japanAiExtension(pi: any) {
     return { systemPrompt: [...(event.systemPrompt ?? []), DEEP_THINK_PROMPT] }
   })
 
+  /** The handler's return value replaces the request body wholesale, so the whole payload is returned. */
   pi.on("before_provider_request", async (event: any, ctx: any) => {
     if (ctx?.model?.provider !== PROVIDER_ID) return
     const payload = event?.payload
     if (!payload) return
 
-    if (OPTIONS.forceEffort) payload.reasoning_effort = OPTIONS.forceEffort
-    if (OPTIONS.deepThink && Array.isArray(payload.tools)) {
-      const present = payload.tools.some((tool: any) => tool?.function?.name === DEEP_THINK_NAME)
-      if (!present) payload.tools.push(WIRE_TOOL)
+    const hasDeepThink =
+      Array.isArray(payload.tools) && payload.tools.some((tool: any) => tool?.function?.name === DEEP_THINK_NAME)
+
+    return {
+      ...payload,
+      ...(OPTIONS.forceEffort ? { reasoning_effort: OPTIONS.forceEffort } : {}),
+      ...(OPTIONS.deepThink && Array.isArray(payload.tools) && !hasDeepThink
+        ? { tools: [...payload.tools, WIRE_TOOL] }
+        : {}),
     }
-    return { payload }
   })
 }
