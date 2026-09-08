@@ -1,4 +1,7 @@
 import { exec } from "node:child_process"
+import fs from "node:fs/promises"
+import os from "node:os"
+import path from "node:path"
 import { promisify } from "node:util"
 
 const ENV_API_KEY = "JAPAN_AI_API_KEY"
@@ -20,6 +23,43 @@ export type Credentials = {
   userId?: string
 }
 
+type ConfigFile = {
+  apiKey?: string
+  userId?: string
+}
+
+export function configFilePath(): string {
+  const configDir = process.env.XDG_CONFIG_HOME ?? path.join(os.homedir(), ".config")
+  return path.join(configDir, "jai-providers", "config.json")
+}
+
+/** Reads `config.json`; a missing file means the credentials live elsewhere. */
+async function readConfigFile(providerID: string): Promise<ConfigFile> {
+  const file = configFilePath()
+  let raw: string
+  try {
+    raw = await fs.readFile(file, "utf8")
+  } catch {
+    return {}
+  }
+
+  try {
+    const parsed: unknown = JSON.parse(raw)
+    if (typeof parsed !== "object" || parsed === null) {
+      console.warn(`[${providerID}] ${file} is not a JSON object; ignoring it`)
+      return {}
+    }
+    const { apiKey, userId } = parsed as Record<string, unknown>
+    return {
+      apiKey: typeof apiKey === "string" ? apiKey : undefined,
+      userId: typeof userId === "string" ? userId : undefined,
+    }
+  } catch (error) {
+    console.warn(`[${providerID}] could not parse ${file}:`, error)
+    return {}
+  }
+}
+
 /**
  * Runs a `!command` value and returns its output, so the key can live in a
  * secret store instead of a file or the environment. Other values pass through.
@@ -38,10 +78,11 @@ export async function resolveSecretValue(value: string | undefined, providerID: 
 }
 
 export async function resolveCredentials(providerID: string, fallbackUserId?: string): Promise<Credentials> {
-  const apiKeyConfig = process.env[ENV_API_KEY]
+  const config = await readConfigFile(providerID)
+  const apiKeyConfig = config.apiKey ?? process.env[ENV_API_KEY]
   return {
     apiKey: await resolveSecretValue(apiKeyConfig, providerID),
     apiKeyConfig,
-    userId: fallbackUserId ?? process.env[ENV_USER_ID],
+    userId: config.userId ?? fallbackUserId ?? process.env[ENV_USER_ID],
   }
 }

@@ -41,7 +41,7 @@ CLI から登録する場合は、`opencode providers login` でも同じ手順�
 
 設定ファイルに API キーやメールアドレスを書く必要はありません。
 
-### 環境変数
+### モデル探索用の資格情報
 
 | 環境変数 | 用途 |
 |----------|------|
@@ -50,15 +50,18 @@ CLI から登録する場合は、`opencode providers login` でも同じ手順�
 
 `JAPAN_AI_API_KEY` はモデル一覧の取得にだけ使われます。
 
-値が `!` で始まる場合は、シェルコマンドとして実行した標準出力を API キーとして扱います（例: `!pass show japan-ai`）。
+`${XDG_CONFIG_HOME:-~/.config}/jai-providers/config.json` に `apiKey` と `userId` を書いた場合は、そちらが環境変数より優先されます。
+
+どちらも、値が `!` で始まる場合はシェルコマンドとして実行した標準出力を API キーとして扱います（例: `!pass show japan-ai`）。
 
 チャットリクエストには `/connect` で保存した API キーを使うため、環境変数だけで `/connect` を省略することはできません。
 
 `userId` は次の順に解決します。
 
 1. `/connect` で保存した `metadata.userId`
-2. プラグインオプションの `userId`
-3. `JAPAN_AI_USER_ID`
+2. `config.json` の `userId`
+3. プラグインオプションの `userId`
+4. `JAPAN_AI_USER_ID`
 
 対話的に `/connect` を実行できない環境では、プラグインオプションで指定できます。
 

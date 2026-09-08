@@ -1,5 +1,5 @@
 import { DEFAULT_BASE_URL } from "@jai-providers/common/api"
-import { resolveCredentials } from "@jai-providers/common/credentials"
+import { configFilePath, resolveCredentials } from "@jai-providers/common/credentials"
 import { DEFAULT_TTL_MS, discoverModelIds } from "@jai-providers/common/discovery"
 import { discoverModelMetadata } from "@jai-providers/common/model-metadata"
 
@@ -29,7 +29,7 @@ export async function registerJapanAIProvider(pi: any, options: RegisterProvider
   if (!credentials.apiKey || !credentials.userId) {
     console.warn(
       `[${PROVIDER_ID}] no credential found; skipping provider registration. ` +
-        "Set JAPAN_AI_API_KEY and JAPAN_AI_USER_ID.",
+        `Set "apiKey" and "userId" in ${configFilePath()}.`,
     )
     return
   }

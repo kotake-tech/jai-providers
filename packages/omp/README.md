@@ -20,35 +20,38 @@ ln -s /path/to/jai-providers/packages/omp/src/extension.ts ~/.omp/agent/extensio
 
 ## 資格情報の設定
 
-API キーとメールアドレスは環境変数から読み取ります。
+API キーとメールアドレスは `${XDG_CONFIG_HOME:-~/.config}/jai-providers/config.json` から読み取ります。
 
 `models.yml` や omp の設定ファイルに資格情報を保存する必要はありません。
 
-| 環境変数 | 用途 |
-|----------|------|
-| `JAPAN_AI_API_KEY` | API キー |
-| `JAPAN_AI_USER_ID` | メールアドレス（`userId`） |
+```json
+{
+  "apiKey": "<APIキー>",
+  "userId": "you@example.com"
+}
+```
 
 どちらかが不足している場合は、JAPAN AI プロバイダーを登録しません。
 
 警告を表示するだけなので、他のプロバイダーには影響しません。
 
+ファイルには本人だけが読める権限を設定してください。
+
 ```sh
-export JAPAN_AI_API_KEY='<APIキー>'
-export JAPAN_AI_USER_ID='you@example.com'
+chmod 600 "${XDG_CONFIG_HOME:-$HOME/.config}/jai-providers/config.json"
 ```
-
-シェルの設定ファイルに API キーを平文で書くと、キーが残ります。
-
-次のコマンド指定を使うと、API キー自体を環境変数やファイルに置かずに済みます。
 
 ### コマンドで取得する
 
-`JAPAN_AI_API_KEY` の値が `!` で始まる場合、その後ろをシェルコマンドとして実行し、標準出力を API キーとして扱います。
+`apiKey` の値が `!` で始まる場合、その後ろをシェルコマンドとして実行し、標準出力を API キーとして扱います。
 
-```sh
-export JAPAN_AI_API_KEY='!<APIキーを標準出力に出すコマンド>'
-export JAPAN_AI_USER_ID='you@example.com'
+キー自体をファイルに置かずに済みます。
+
+```json
+{
+  "apiKey": "!<APIキーを標準出力に出すコマンド>",
+  "userId": "you@example.com"
+}
 ```
 
 利用しているシークレット管理に応じてコマンドを選んでください。
@@ -68,14 +71,24 @@ omp はコマンドの結果をキャッシュし、認証エラーが発生し�
 
 コマンドは 10 秒でタイムアウトします。失敗した場合は資格情報なしとして扱います。
 
+### 環境変数を使う
+
+設定ファイルが無い場合は、次の環境変数を使います。値の扱いは `config.json` と同じで、`!コマンド` も使えます。
+
+| 環境変数 | 用途 |
+|----------|------|
+| `JAPAN_AI_API_KEY` | API キー |
+| `JAPAN_AI_USER_ID` | メールアドレス（`userId`） |
+
 ### opencode の資格情報を使う
 
-opencode の `/connect japan-ai` で登録済みの場合は、`auth.json` から取り出して環境変数に渡せます。
+opencode の `/connect japan-ai` で登録済みの場合は、`auth.json` から取り出すコマンドを指定できます。
 
-```sh
-AUTH="${XDG_DATA_HOME:-$HOME/.local/share}/opencode/auth.json"
-export JAPAN_AI_API_KEY="!jq -r '.\"japan-ai\".key' $AUTH"
-export JAPAN_AI_USER_ID="$(jq -r '."japan-ai".metadata.userId' "$AUTH")"
+```json
+{
+  "apiKey": "!jq -r '.\"japan-ai\".key' \"${XDG_DATA_HOME:-$HOME/.local/share}/opencode/auth.json\"",
+  "userId": "you@example.com"
+}
 ```
 
 拡張自体は `auth.json` を読みません。参照するかどうかは、この設定で選べます。
