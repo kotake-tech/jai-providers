@@ -20,53 +20,65 @@ ln -s /path/to/jai-providers/packages/omp/src/extension.ts ~/.omp/agent/extensio
 
 ## 資格情報の設定
 
-API キーとメールアドレスは、opencode の資格情報ファイルまたは環境変数から読み取ります。
+API キーとメールアドレスは環境変数から読み取ります。
 
 `models.yml` や omp の設定ファイルに資格情報を保存する必要はありません。
 
-API キーとメールアドレスは次の順に解決します。
+| 環境変数 | 用途 |
+|----------|------|
+| `JAPAN_AI_API_KEY` | API キー |
+| `JAPAN_AI_USER_ID` | メールアドレス（`userId`） |
 
 どちらかが不足している場合は、JAPAN AI プロバイダーを登録しません。
 
 警告を表示するだけなので、他のプロバイダーには影響しません。
 
-| 優先 | API キー | userId（メールアドレス） |
-|------|----------|---------------------------|
-| 1 | `auth.json` の `japan-ai.key` | `auth.json` の `japan-ai.metadata.userId` |
-| 2 | `JAPAN_AI_API_KEY` | `JAPAN_AI_USER_ID` |
-
-### opencode の `/connect` で登録する
-
-opencode で一度登録すると、omp も同じ資格情報を利用します。
-
-```
-/connect japan-ai
-```
-
-資格情報は `${XDG_DATA_HOME:-~/.local/share}/opencode/auth.json` に保存されます。
-
-opencode を使わない場合も、同じ形式のファイルを置けば omp から利用できます。
-
-```json
-{
-  "japan-ai": {
-    "type": "api",
-    "key": "<APIキー>",
-    "metadata": { "userId": "you@example.com" }
-  }
-}
-```
-
-### 環境変数を使う
-
 ```sh
-export JAPAN_AI_API_KEY="$(security find-generic-password -s japan-ai -w)"
+export JAPAN_AI_API_KEY='<APIキー>'
 export JAPAN_AI_USER_ID='you@example.com'
 ```
 
 シェルの設定ファイルに API キーを平文で書くと、キーが残ります。
 
-macOS のキーチェーンやシークレットマネージャーを使って設定してください。
+次のコマンド指定を使うと、API キー自体を環境変数やファイルに置かずに済みます。
+
+### コマンドで取得する
+
+`JAPAN_AI_API_KEY` の値が `!` で始まる場合、その後ろをシェルコマンドとして実行し、標準出力を API キーとして扱います。
+
+```sh
+export JAPAN_AI_API_KEY='!<APIキーを標準出力に出すコマンド>'
+export JAPAN_AI_USER_ID='you@example.com'
+```
+
+利用しているシークレット管理に応じてコマンドを選んでください。
+
+| シークレット管理 | コマンド例 |
+|------------------|------------|
+| macOS キーチェーン | `security find-generic-password -s japan-ai -w` |
+| 1Password CLI | `op read op://Private/japan-ai/credential` |
+| pass | `pass show japan-ai` |
+| GCP Secret Manager | `gcloud secrets versions access latest --secret=japan-ai` |
+
+omp では、この文字列をそのままプロバイダーの `apiKey` として登録します。
+
+omp はコマンドの結果をキャッシュし、認証エラーが発生したときに再実行してキーを取り直します。
+
+キーを更新しても omp を再起動する必要はありません。
+
+コマンドは 10 秒でタイムアウトします。失敗した場合は資格情報なしとして扱います。
+
+### opencode の資格情報を使う
+
+opencode の `/connect japan-ai` で登録済みの場合は、`auth.json` から取り出して環境変数に渡せます。
+
+```sh
+AUTH="${XDG_DATA_HOME:-$HOME/.local/share}/opencode/auth.json"
+export JAPAN_AI_API_KEY="!jq -r '.\"japan-ai\".key' $AUTH"
+export JAPAN_AI_USER_ID="$(jq -r '."japan-ai".metadata.userId' "$AUTH")"
+```
+
+拡張自体は `auth.json` を読みません。参照するかどうかは、この設定で選べます。
 
 ### 確認
 

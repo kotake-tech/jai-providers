@@ -50,6 +50,8 @@ CLI から登録する場合は、`opencode providers login` でも同じ手順�
 
 `JAPAN_AI_API_KEY` はモデル一覧の取得にだけ使われます。
 
+値が `!` で始まる場合は、シェルコマンドとして実行した標準出力を API キーとして扱います（例: `!pass show japan-ai`）。
+
 チャットリクエストには `/connect` で保存した API キーを使うため、環境変数だけで `/connect` を省略することはできません。
 
 `userId` は次の順に解決します。

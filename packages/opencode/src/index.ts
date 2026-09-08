@@ -2,10 +2,11 @@ import type { Config, Plugin, PluginOptions } from "@opencode-ai/plugin"
 
 import { DEFAULT_BASE_URL } from "@jai-providers/common/api"
 import { KNOWN_MODEL_IDS } from "@jai-providers/common/catalog"
-import { resolveCredentials } from "@jai-providers/common/credentials"
+import { resolveCredentials, resolveSecretValue } from "@jai-providers/common/credentials"
 import { DEEP_THINK_PROMPT } from "@jai-providers/common/deep-think"
 import { DEFAULT_TTL_MS, discoverModelIds } from "@jai-providers/common/discovery"
 import { discoverModelMetadata } from "@jai-providers/common/model-metadata"
+import { readStoredAuth } from "./auth-store.ts"
 import { DEEP_THINK_TOOL } from "./deep-think.ts"
 import { buildConfigModels } from "./models.ts"
 
@@ -54,9 +55,19 @@ function parseOptions(options?: PluginOptions): Settings {
   }
 }
 
+/** `/connect` first, then the environment, for the model list request. */
+async function resolveDiscoveryCredentials(settings: Settings) {
+  const stored = await readStoredAuth(PROVIDER_ID)
+  const fromEnv = await resolveCredentials(PROVIDER_ID, settings.userId)
+  return {
+    apiKey: (await resolveSecretValue(stored?.key, PROVIDER_ID)) ?? fromEnv.apiKey,
+    userId: stored?.metadata?.userId ?? fromEnv.userId,
+  }
+}
+
 async function resolveModelIds(settings: Settings): Promise<readonly string[]> {
   if (!settings.dynamicModels) return KNOWN_MODEL_IDS
-  const credentials = await resolveCredentials(PROVIDER_ID, settings.userId)
+  const credentials = await resolveDiscoveryCredentials(settings)
   return discoverModelIds({
     ...credentials,
     baseURL: settings.baseURL,

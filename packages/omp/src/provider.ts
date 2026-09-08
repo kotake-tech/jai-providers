@@ -10,7 +10,7 @@ const API = "openai-completions"
 
 export type RegisterProviderOptions = {
   baseURL?: string
-  /** Account email, when it is not already in opencode's auth store or the environment. */
+  /** Account email, when `JAPAN_AI_USER_ID` is not set. */
   userId?: string
 }
 
@@ -29,7 +29,7 @@ export async function registerJapanAIProvider(pi: any, options: RegisterProvider
   if (!credentials.apiKey || !credentials.userId) {
     console.warn(
       `[${PROVIDER_ID}] no credential found; skipping provider registration. ` +
-        "Run `/connect japan-ai` in opencode, or set JAPAN_AI_API_KEY and JAPAN_AI_USER_ID.",
+        "Set JAPAN_AI_API_KEY and JAPAN_AI_USER_ID.",
     )
     return
   }
@@ -40,7 +40,8 @@ export async function registerJapanAIProvider(pi: any, options: RegisterProvider
   pi.registerProvider(PROVIDER_ID, {
     baseUrl: chatCompletionsUrl(baseURL, credentials.userId),
     api: API,
-    apiKey: credentials.apiKey,
+    // omp resolves `!command` and env-var names itself, on each request.
+    apiKey: credentials.apiKeyConfig ?? credentials.apiKey,
     models: buildOmpModels(ids, metadata),
   })
 }
