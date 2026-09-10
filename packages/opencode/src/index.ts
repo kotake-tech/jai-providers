@@ -29,7 +29,7 @@ export type JapanAIOptions = {
   exclude?: string[]
   /**
    * Register the `deep_think` tool and tell this provider's models to use it.
-   * Default true. See `deep-think.ts` for why it exists.
+   * Default false. See `deep-think.ts` for why it exists.
    */
   deepThink?: boolean
   /**
@@ -50,7 +50,7 @@ function parseOptions(options?: PluginOptions): Settings {
     dynamicModels: raw.dynamicModels ?? true,
     ttlMs: raw.ttlMs,
     exclude: raw.exclude,
-    deepThink: raw.deepThink ?? true,
+    deepThink: raw.deepThink ?? false,
     forceEffort: raw.forceEffort,
   }
 }

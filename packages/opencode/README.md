@@ -80,7 +80,7 @@ CLI から登録する場合は、`opencode providers login` でも同じ手順�
 | `dynamicModels` | `true` | `false` にすると `/v1/models` を取得せず、`src/catalog.ts` の一覧だけを登録する |
 | `ttlMs` | 6 時間 | モデル一覧とメタデータのキャッシュ有効期限 |
 | `exclude` | `DEFAULT_EXCLUDE` | 除外するモデル ID を表す正規表現の文字列配列 |
-| `deepThink` | `true` | `deep_think` ツールの登録とシステムプロンプト追加。`false` で無効 |
+| `deepThink` | `false` | `deep_think` ツールの登録とシステムプロンプト追加。`true` で有効 |
 | `forceEffort` | なし | 指定すると全リクエストの `reasoning_effort` を固定する。variant より優先される |
 
 ## モデル一覧の解決
@@ -166,7 +166,7 @@ opencode にはプロバイダーごとのツールスコープがないため�
 
 モデルごとに effort を使い分ける場合は指定せず、variant で選択してください。
 
-`deepThink: false` を指定すると、ツールの登録とシステムプロンプトの追加を無効にできます。
+既定では無効です。`deepThink: true` を指定すると、ツールの登録とシステムプロンプトの追加を有効にできます。
 
 ## 設定ファイル側で上書きする
 

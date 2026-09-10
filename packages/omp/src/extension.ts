@@ -28,7 +28,7 @@ export type JapanAIExtensionOptions = {
 }
 
 const OPTIONS: JapanAIExtensionOptions = {
-  deepThink: true,
+  deepThink: false,
   forceEffort: "none",
   registerProvider: true,
 }

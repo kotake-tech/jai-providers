@@ -165,7 +165,7 @@ JAPAN AI は、最初のトークンが 60 秒以内に届かないリクエス�
 
 | オプション | 既定値 | 説明 |
 |------|--------|------|
-| `deepThink` | `true` | ツール登録・注入とシステムプロンプト追加 |
+| `deepThink` | `false` | ツール登録・注入とシステムプロンプト追加 |
 | `forceEffort` | `"none"` | `reasoning_effort` の固定値。`false` で無効 |
 | `registerProvider` | `true` | プロバイダーとモデル一覧の登録 |
 
