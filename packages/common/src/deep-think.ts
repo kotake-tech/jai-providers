@@ -40,3 +40,6 @@ export const DEEP_THINK_PROMPT = [
 ].join(" ")
 
 export const DEEP_THINK_RESULT = "Recorded. Continue with the task."
+
+/** Native reasoning must be off for `deep_think` to be the only place reasoning happens. */
+export const DEEP_THINK_REASONING_EFFORT = "none"

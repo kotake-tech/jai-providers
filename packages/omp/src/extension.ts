@@ -6,11 +6,13 @@
  * `~/.omp/agent/extensions/` for automatic discovery. Nothing needs to be
  * written to models.yml.
  */
+import { resolveMeta } from "@jai-providers/common/catalog"
 import {
   DEEP_THINK_ARG_DESCRIPTION,
   DEEP_THINK_DESCRIPTION,
   DEEP_THINK_NAME,
   DEEP_THINK_PROMPT,
+  DEEP_THINK_REASONING_EFFORT,
   DEEP_THINK_RESULT,
 } from "@jai-providers/common/deep-think"
 
@@ -19,17 +21,14 @@ import { registerJapanAIProvider } from "./provider.ts"
 const PROVIDER_ID = "japan-ai"
 
 export type JapanAIExtensionOptions = {
-  /** Register `deep_think` and steer this provider's models at it. */
+  /** Register `deep_think`, steer this provider's models at it, and force `reasoning_effort` to "none". */
   deepThink: boolean
-  /** Pin `reasoning_effort` on every request to this provider, or `false` to leave it. */
-  forceEffort: string | false
   /** Register the provider and its models. Turn off to define them in models.yml instead. */
   registerProvider: boolean
 }
 
 const OPTIONS: JapanAIExtensionOptions = {
   deepThink: false,
-  forceEffort: "none",
   registerProvider: true,
 }
 
@@ -82,9 +81,12 @@ export default async function japanAiExtension(pi: any) {
     const hasDeepThink =
       Array.isArray(payload.tools) && payload.tools.some((tool: any) => tool?.function?.name === DEEP_THINK_NAME)
 
+    // Thinking-only models (e.g. glm-5.3-flash) reject reasoning_effort="none" outright.
+    const canDisableThinking = typeof payload.model === "string" && resolveMeta(payload.model).efforts !== undefined
+
     return {
       ...payload,
-      ...(OPTIONS.forceEffort ? { reasoning_effort: OPTIONS.forceEffort } : {}),
+      ...(OPTIONS.deepThink && canDisableThinking ? { reasoning_effort: DEEP_THINK_REASONING_EFFORT } : {}),
       ...(OPTIONS.deepThink && Array.isArray(payload.tools) && !hasDeepThink
         ? { tools: [...payload.tools, WIRE_TOOL] }
         : {}),

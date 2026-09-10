@@ -149,13 +149,11 @@ JAPAN AI は、最初のトークンが 60 秒以内に届かないリクエス�
 
 モデルが非表示の推論を長く行うと、その間はトークンが届かないため、タイムアウトすることがあります。
 
-この拡張では、JAPAN AI のモデルに対してだけ次の処理を行います。
+`deepThink` を有効にすると、この拡張は JAPAN AI のモデルに対してだけ次の処理を行います。
 
-1. `reasoning_effort` を `none` に固定します（`before_provider_request`）。
-2. `deep_think` ツールを登録し、リクエストの `tools` に追加します。
-3. 複雑な回答の前に `deep_think` を呼ぶよう、システムプロンプトを追加します（`before_agent_start`）。
-
-この設定は通常の利用で変更する必要はありません。
+1. `deep_think` ツールを登録し、リクエストの `tools` に追加します。
+2. 複雑な回答の前に `deep_think` を呼ぶよう、システムプロンプトを追加します（`before_agent_start`）。
+3. `reasoning_effort` を `none` に固定します（`before_provider_request`）。GLM-5.3のような、無効化できないthinking専用モデルには適用しません。
 
 ## 開発者向け設定
 
@@ -165,11 +163,8 @@ JAPAN AI は、最初のトークンが 60 秒以内に届かないリクエス�
 
 | オプション | 既定値 | 説明 |
 |------|--------|------|
-| `deepThink` | `false` | ツール登録・注入とシステムプロンプト追加 |
-| `forceEffort` | `"none"` | `reasoning_effort` の固定値。`false` で無効 |
+| `deepThink` | `false` | ツール登録・注入・システムプロンプト追加・`reasoning_effort`固定 |
 | `registerProvider` | `true` | プロバイダーとモデル一覧の登録 |
-
-`forceEffort` を無効にする場合は、ompの`:effort`セレクタで低いeffortを選択してください。
 
 omp は、拡張が登録したツールをそのままリクエストの `tools` に含めません。`hub` 経由の参照では追加のリクエストが発生するため、`before_provider_request` でツールスキーマを直接 `payload.tools` に追加しています。
 

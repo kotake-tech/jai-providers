@@ -80,8 +80,7 @@ CLI から登録する場合は、`opencode providers login` でも同じ手順�
 | `dynamicModels` | `true` | `false` にすると `/v1/models` を取得せず、`src/catalog.ts` の一覧だけを登録する |
 | `ttlMs` | 6 時間 | モデル一覧とメタデータのキャッシュ有効期限 |
 | `exclude` | `DEFAULT_EXCLUDE` | 除外するモデル ID を表す正規表現の文字列配列 |
-| `deepThink` | `false` | `deep_think` ツールの登録とシステムプロンプト追加。`true` で有効 |
-| `forceEffort` | なし | 指定すると全リクエストの `reasoning_effort` を固定する。variant より優先される |
+| `deepThink` | `false` | `deep_think` ツールの登録・システムプロンプト追加・`reasoning_effort`を`none`に固定。`true` で有効 |
 
 ## モデル一覧の解決
 
@@ -147,26 +146,19 @@ JAPAN AI は、最初のトークンが 60 秒以内に届かないリクエス�
 
 - `deep_think` ツールを登録し、`thoughts` 引数に推論を書かせます。
 - JAPAN AI のモデルにだけ、`deep_think` を使うシステムプロンプトを追加します。
+- JAPAN AI のモデルにだけ、`reasoning_effort` を `none` に固定します。GLM-5.3のような、無効化できないthinking専用モデルには適用しません。
 
 opencode にはプロバイダーごとのツールスコープがないため、ツール自体はすべてのモデルに登録されます。
 
-ただし、ツールを使うよう促すシステムプロンプトは JAPAN AI のモデルにだけ追加されます。
+ただし、システムプロンプトの追加と `reasoning_effort` の固定は JAPAN AI のモデルにだけ行われます。
 
-この対策を使う場合も、reasoning effort は低く設定してください。
-
-モデル variant で選ぶか、`forceEffort` で固定します。
+既定では無効です。`deepThink: true` を指定すると有効にできます。
 
 ```json
 {
-  "plugin": [["file:///path/to/jai-providers/packages/opencode/src/index.ts", { "forceEffort": "none" }]]
+  "plugin": [["file:///path/to/jai-providers/packages/opencode/src/index.ts", { "deepThink": true }]]
 }
 ```
-
-`forceEffort` は variant の選択を上書きするため、既定では無効です。
-
-モデルごとに effort を使い分ける場合は指定せず、variant で選択してください。
-
-既定では無効です。`deepThink: true` を指定すると、ツールの登録とシステムプロンプトの追加を有効にできます。
 
 ## 設定ファイル側で上書きする
 

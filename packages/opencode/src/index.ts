@@ -1,9 +1,9 @@
 import type { Config, Plugin, PluginOptions } from "@opencode-ai/plugin"
 
 import { DEFAULT_BASE_URL } from "@jai-providers/common/api"
-import { KNOWN_MODEL_IDS } from "@jai-providers/common/catalog"
+import { KNOWN_MODEL_IDS, resolveMeta } from "@jai-providers/common/catalog"
 import { resolveCredentials, resolveSecretValue } from "@jai-providers/common/credentials"
-import { DEEP_THINK_PROMPT } from "@jai-providers/common/deep-think"
+import { DEEP_THINK_PROMPT, DEEP_THINK_REASONING_EFFORT } from "@jai-providers/common/deep-think"
 import { DEFAULT_TTL_MS, discoverModelIds } from "@jai-providers/common/discovery"
 import { discoverModelMetadata } from "@jai-providers/common/model-metadata"
 import { readStoredAuth } from "./auth-store.ts"
@@ -28,19 +28,15 @@ export type JapanAIOptions = {
   /** Regex sources for discovered ids to drop. Defaults to `DEFAULT_EXCLUDE`. */
   exclude?: string[]
   /**
-   * Register the `deep_think` tool and tell this provider's models to use it.
-   * Default false. See `deep-think.ts` for why it exists.
+   * Register the `deep_think` tool, tell this provider's models to use it,
+   * and force `reasoningEffort` to "none" so native reasoning does not
+   * compete with it. Default false. See `deep-think.ts` for why it exists.
    */
   deepThink?: boolean
-  /**
-   * Pin `reasoningEffort` on every request to this provider, overriding the
-   * variant. Off by default; `"none"` is the setting that avoids the 60s limit.
-   */
-  forceEffort?: string
 }
 
 type Settings = Required<Pick<JapanAIOptions, "baseURL" | "dynamicModels" | "deepThink">> &
-  Pick<JapanAIOptions, "userId" | "ttlMs" | "exclude" | "forceEffort">
+  Pick<JapanAIOptions, "userId" | "ttlMs" | "exclude">
 
 function parseOptions(options?: PluginOptions): Settings {
   const raw = (options ?? {}) as JapanAIOptions
@@ -51,7 +47,6 @@ function parseOptions(options?: PluginOptions): Settings {
     ttlMs: raw.ttlMs,
     exclude: raw.exclude,
     deepThink: raw.deepThink ?? false,
-    forceEffort: raw.forceEffort,
   }
 }
 
@@ -158,9 +153,11 @@ export const JapanAIPlugin: Plugin = async (_input, options) => {
     },
 
     "chat.params": async (input, output) => {
-      if (!settings.forceEffort) return
+      if (!settings.deepThink) return
       if (input.model.providerID !== PROVIDER_ID) return
-      output.options.reasoningEffort = settings.forceEffort
+      // Thinking-only models (e.g. glm-5.3-flash) reject a forced "none" effort outright.
+      if (resolveMeta(input.model.id).efforts === undefined) return
+      output.options.reasoningEffort = DEEP_THINK_REASONING_EFFORT
     },
   }
 }
